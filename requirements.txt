@@ -1,0 +1,17 @@
+ollama
+chromadb
+fastapi
+uvicorn[standard]
+mcp
+python-multipart
+pypdf
+python-docx
+python-pptx
+openpyxl
+beautifulsoup4
+lxml
+striprtf
+pillow
+pytesseract
+pdf2image
+faster-whisper

@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+set -e
+cd "$(dirname "$0")"
+
+PORT="${GED_PORT:-8011}"
+HOTE="${GED_HOST:-0.0.0.0}"
+
+if [ ! -d .venv ]; then
+  echo "[start] Creation de l'environnement virtuel..."
+  python3 -m venv .venv
+  .venv/bin/python -m pip install -q -r requirements.txt
+fi
+
+source .venv/bin/activate
+
+if ! curl -s http://localhost:11434/api/tags >/dev/null 2>&1; then
+  echo "[start] Demarrage d'Ollama..."
+  nohup ollama serve >/tmp/ollama.log 2>&1 &
+  for _ in $(seq 1 30); do
+    curl -s http://localhost:11434/api/tags >/dev/null 2>&1 && break
+    sleep 1
+  done
+fi
+
+echo "[start] Indexation des documents..."
+python ingestion.py
+
+PIDS=()
+arreter() {
+  echo
+  echo "[start] Arret..."
+  for pid in "${PIDS[@]}"; do kill "$pid" >/dev/null 2>&1 || true; done
+  exit 0
+}
+trap arreter INT TERM
+
+echo "[start] Lancement de l'API sur http://${HOTE}:${PORT}"
+uvicorn api:app --host "$HOTE" --port "$PORT" &
+PIDS+=($!)
+
+if [ "${GED_TUNNEL:-0}" = "1" ] && command -v cloudflared >/dev/null 2>&1; then
+  echo "[start] Ouverture du tunnel Cloudflare..."
+  cloudflared tunnel --url "http://localhost:${PORT}" &
+  PIDS+=($!)
+fi
+
+echo "[start] Tout est lance. Ouvrez http://localhost:${PORT}  (Ctrl+C pour arreter)"
+wait
