@@ -1,5 +1,21 @@
 window.categorieFiltre = null;
 
+function iconePour(nom){
+  const ext = nom.toLowerCase().split(".").pop();
+  if(ext === "pdf") return "📕";
+  if(["doc","docx","odt","rtf"].includes(ext)) return "📘";
+  if(["xls","xlsx","xlsm","ods","csv"].includes(ext)) return "📊";
+  if(["ppt","pptx","odp"].includes(ext)) return "📙";
+  if(["png","jpg","jpeg","gif","bmp","tif","tiff","webp","svg"].includes(ext)) return "🖼️";
+  if(["mp3","wav","m4a","flac","ogg","aac","wma"].includes(ext)) return "🎵";
+  if(["mp4","mkv","avi","mov","webm","m4v","mpeg","mpg"].includes(ext)) return "🎬";
+  if(["html","htm"].includes(ext)) return "🌐";
+  if(["json","xml","yaml","yml"].includes(ext)) return "🔧";
+  if(["zip","rar","7z","tar","gz"].includes(ext)) return "🗜️";
+  if(["md","markdown"].includes(ext)) return "📝";
+  return "📄";
+}
+
 function definirFiltre(chemin, element){
   window.categorieFiltre = chemin || null;
   document.querySelectorAll("#arbo .btnFiltre").forEach(b => b.classList.remove("actif"));
@@ -43,7 +59,7 @@ function rendreNoeud(noeud, racine){
   for(const fichier of noeud.fichiers){
     const ligne = document.createElement("div");
     ligne.className = "fichier";
-    ligne.textContent = "📄 " + fichier;
+    ligne.textContent = iconePour(fichier) + " " + fichier;
     enfants.appendChild(ligne);
   }
   details.appendChild(enfants);

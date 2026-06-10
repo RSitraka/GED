@@ -5,6 +5,7 @@ import tempfile
 import config
 
 _whisper = None
+_ocr = None
 
 
 def extraire_texte(chemin):
@@ -135,7 +136,30 @@ def _lire_image(chemin):
     return "\n\n".join(parties)
 
 
+def _moteur_ocr():
+    global _ocr
+    if _ocr is None:
+        from rapidocr_onnxruntime import RapidOCR
+
+        _ocr = RapidOCR()
+    return _ocr
+
+
 def _ocr_image(chemin):
+    try:
+        moteur = _moteur_ocr()
+    except ImportError:
+        return _ocr_tesseract(chemin)
+    try:
+        resultat, _ = moteur(chemin)
+        if resultat:
+            return "\n".join(ligne[1] for ligne in resultat).strip()
+        return ""
+    except Exception:
+        return _ocr_tesseract(chemin)
+
+
+def _ocr_tesseract(chemin):
     try:
         import pytesseract
         from PIL import Image

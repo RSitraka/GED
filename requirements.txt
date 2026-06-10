@@ -12,6 +12,7 @@ beautifulsoup4
 lxml
 striprtf
 pillow
+rapidocr-onnxruntime
 pytesseract
 pdf2image
 faster-whisper

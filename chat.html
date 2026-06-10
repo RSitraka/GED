@@ -1,43 +1,18 @@
 <!DOCTYPE html>
 <html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Assistant documentaire</title>
-<style>
-  *{ box-sizing:border-box; }
-  body{ font-family:sans-serif; margin:0; height:100vh; display:flex; }
-  #cote{ width:300px; min-width:300px; border-right:1px solid #ddd; padding:14px;
-         overflow:auto; background:#fafafa; }
-  #cote h3{ margin:0 0 10px; font-size:1em; }
-  #principal{ flex:1; display:flex; flex-direction:column; padding:20px; max-width:760px;
-              margin:0 auto; width:100%; }
-  #fil{ flex:1; border:1px solid #ddd; border-radius:8px; padding:12px; overflow:auto; }
-  .moi{ text-align:right; color:#2f4cdd; margin:8px 0; }
-  .bot{ text-align:left; color:#222; margin:8px 0; white-space:pre-wrap; }
-  .info{ text-align:center; color:#888; font-size:.9em; margin:8px 0; }
-  input,select,button{ padding:9px; }
-  button{ cursor:pointer; }
-  #q{ flex:1; }
-  .barre{ display:flex; gap:8px; align-items:center; margin-top:10px; flex-wrap:wrap; }
-  details{ margin:2px 0; }
-  summary{ cursor:pointer; padding:3px 4px; border-radius:4px; user-select:none;
-           display:flex; align-items:center; gap:6px; }
-  summary:hover{ background:#eef; }
-  summary::-webkit-details-marker{ }
-  .nomDossier{ flex:1; }
-  .racine > summary .nomDossier{ font-weight:bold; }
-  .btnFiltre{ font-size:.85em; color:#aaa; padding:0 5px; border-radius:4px; }
-  .btnFiltre:hover{ color:#2f4cdd; background:#dde; }
-  .btnFiltre.actif{ background:#2f4cdd; color:#fff; }
-  .enfants{ margin-left:9px; padding-left:11px; border-left:1px solid #cdcdcd; }
-  .racine > .enfants{ margin-left:0; padding-left:0; border-left:none; }
-  .fichier{ padding:3px 4px 3px 8px; color:#444; font-size:.92em; }
-  #filtreActif{ font-size:.85em; color:#2f4cdd; margin:8px 0; min-height:1em; }
-</style></head><body>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/theme.css">
+</head><body>
 
 <aside id="cote">
-  <h3>Documents</h3>
+  <h3>📂 Documents</h3>
   <div id="filtreActif"></div>
   <div id="arbo"></div>
-  <button onclick="window.chargerArbre()" style="margin-top:10px;width:100%">Rafraîchir</button>
+  <button id="rafraichir" onclick="window.chargerArbre()">↻ Rafraîchir</button>
 </aside>
 
 <main id="principal">
@@ -47,10 +22,11 @@
     <input id="q" placeholder="Posez votre question…" onkeydown="if(event.key==='Enter')envoyer()">
     <button onclick="envoyer()">Envoyer</button>
   </p>
+  <label class="option"><input type="checkbox" id="insister" checked> Recherche approfondie (insiste sur tous les fichiers)</label>
   <p class="barre">
     <input id="catUpload" placeholder="Catégorie (sous-dossier)" value="general">
     <input id="fichier" type="file" accept="*/*">
-    <button onclick="televerser()">Ajouter un document</button>
+    <button onclick="televerser()">Ajouter</button>
   </p>
 </main>
 
@@ -65,6 +41,34 @@ function ajouter(qui, texte){
   fil.scrollTop = fil.scrollHeight;
 }
 
+function echapper(s){
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function formater(texte){
+  let t = echapper(texte);
+  t = t.replace(/\*\*(.+?)\*\*/g, '<strong class="cle">$1</strong>');
+  t = t.replace(/\*(.+?)\*/g, '<strong class="cle">$1</strong>');
+  return t;
+}
+
+function ajouterReponse(reponse, sources){
+  const d = document.createElement("div");
+  d.className = "bot";
+  const corps = document.createElement("div");
+  corps.innerHTML = formater(reponse.trim());
+  d.appendChild(corps);
+  if(sources && sources.length > 0){
+    const s = document.createElement("div");
+    s.className = "source";
+    s.textContent = "Sources : " + sources.join(", ");
+    d.appendChild(s);
+  }
+  const fil = document.getElementById("fil");
+  fil.appendChild(d);
+  fil.scrollTop = fil.scrollHeight;
+}
+
 async function envoyer(){
   const champ = document.getElementById("q");
   const question = champ.value.trim();
@@ -74,13 +78,14 @@ async function envoyer(){
   const r = await fetch("/demander", {
     method: "POST",
     headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({ texte: question, categorie: window.categorieFiltre })
+    body: JSON.stringify({
+      texte: question,
+      categorie: window.categorieFiltre,
+      insister: document.getElementById("insister").checked
+    })
   });
   const data = await r.json();
-  let txt = data.reponse;
-  if(data.sources && data.sources.length > 0)
-    txt += "\n\nSources : " + data.sources.join(", ");
-  ajouter("bot", txt);
+  ajouterReponse(data.reponse, data.sources);
 }
 
 async function televerser(){

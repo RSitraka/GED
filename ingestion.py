@@ -8,7 +8,7 @@ import extraction
 
 
 def vectoriser(texte):
-    reponse = ollama.embeddings(model=config.EMBED_MODEL, prompt=texte)
+    reponse = ollama.embeddings(model=config.EMBED_MODEL, prompt=config.EMBED_PREFIXE_DOC + texte)
     return reponse["embedding"]
 
 
@@ -43,7 +43,7 @@ def ingerer():
     compteur = 0
     for racine, dossiers, fichiers in os.walk(config.DOSSIER_DOCS):
         for nom in fichiers:
-            if nom.startswith("."):
+            if nom.startswith(".") or "Zone.Identifier" in nom:
                 continue
             chemin = os.path.join(racine, nom)
             texte = extraction.extraire_texte(chemin)

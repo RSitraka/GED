@@ -21,11 +21,12 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 class Question(BaseModel):
     texte: str
     categorie: str | None = None
+    insister: bool | None = None
 
 
 @app.post("/demander")
 def demander(q: Question):
-    reponse, sources = rag.repondre(q.texte, categorie=q.categorie)
+    reponse, sources = rag.repondre(q.texte, categorie=q.categorie, insister=q.insister)
     return {"reponse": reponse, "sources": sources}
 
 
