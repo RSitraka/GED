@@ -60,6 +60,9 @@ function rendreNoeud(noeud, racine){
     const ligne = document.createElement("div");
     ligne.className = "fichier";
     ligne.textContent = iconePour(fichier) + " " + fichier;
+    const chemin = (noeud.chemin ? noeud.chemin + "/" : "") + fichier;
+    ligne.title = "Aperçu : " + fichier;
+    ligne.onclick = () => { if(window.apercu) window.apercu(chemin, fichier); };
     enfants.appendChild(ligne);
   }
   details.appendChild(enfants);
@@ -74,7 +77,24 @@ async function chargerArbre(){
     conteneur.innerHTML = "";
     conteneur.appendChild(rendreNoeud(arbre, true));
     definirFiltre(window.categorieFiltre, null);
+    remplirCategories(arbre);
   }catch(e){}
+}
+
+function remplirCategories(arbre){
+  const liste = document.getElementById("listeCategories");
+  if(!liste) return;
+  const chemins = [];
+  (function parcourir(noeud){
+    if(noeud.chemin) chemins.push(noeud.chemin);
+    noeud.dossiers.forEach(parcourir);
+  })(arbre);
+  liste.innerHTML = "";
+  for(const chemin of chemins.sort()){
+    const option = document.createElement("option");
+    option.value = chemin;
+    liste.appendChild(option);
+  }
 }
 
 window.chargerArbre = chargerArbre;

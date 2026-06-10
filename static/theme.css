@@ -66,6 +66,47 @@ body::before{
   color:transparent;
 }
 
+.bloc{
+  margin-top:18px;
+  padding-top:14px;
+  border-top:1px solid var(--bord);
+}
+
+.bloc > input,
+.bloc > button{
+  display:block;
+  width:100%;
+  margin-bottom:8px;
+}
+
+#catUpload{ padding-right:34px; }
+
+#catUpload::-webkit-calendar-picker-indicator{
+  opacity:1;
+  cursor:pointer;
+  filter:invert(70%);
+}
+
+#fichier{ display:none; }
+
+.lien-ajout{
+  display:block;
+  text-align:center;
+  padding:11px 14px;
+  border-radius:14px;
+  cursor:pointer;
+  font-weight:600;
+  color:#fff;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  box-shadow:0 8px 20px rgba(124,92,255,.3);
+  transition:transform .15s, box-shadow .15s;
+}
+
+.lien-ajout:hover{
+  transform:translateY(-2px);
+  box-shadow:0 12px 28px rgba(124,92,255,.5);
+}
+
 #principal{
   flex:1;
   height:100%;
@@ -183,18 +224,6 @@ input:focus{
 
 #q{ flex:1; }
 
-.option{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  margin-top:10px;
-  font-size:.85em;
-  color:var(--doux);
-  cursor:pointer;
-}
-
-.option input{ accent-color:var(--accent); width:16px; height:16px; }
-
 input[type=file]{ padding:9px 12px; color:var(--doux); }
 
 input[type=file]::file-selector-button{
@@ -310,6 +339,97 @@ details[open] > summary .nomDossier::before{ transform:rotate(90deg); }
   margin:6px 0 12px;
   min-height:1em;
 }
+
+.fichier{ cursor:pointer; }
+
+#apercuModal{
+  display:none;
+  position:fixed;
+  inset:0;
+  z-index:50;
+  padding:30px;
+  align-items:center;
+  justify-content:center;
+  background:rgba(5,6,20,.7);
+  backdrop-filter:blur(6px);
+  -webkit-backdrop-filter:blur(6px);
+}
+
+.apercuBoite{
+  display:flex;
+  flex-direction:column;
+  min-width:320px;
+  max-width:92vw;
+  max-height:90vh;
+  overflow:hidden;
+  border-radius:20px;
+  background:rgba(18,20,38,.95);
+  border:1px solid var(--bord);
+  box-shadow:0 30px 80px rgba(0,0,0,.6);
+}
+
+.apercuEntete{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:14px 18px;
+  border-bottom:1px solid var(--bord);
+  font-family:'Space Grotesk',sans-serif;
+  font-weight:600;
+}
+
+.apercuFermer{
+  padding:8px 14px;
+  background:rgba(255,255,255,.1);
+  box-shadow:none;
+}
+
+.apercuFermer:hover{ background:rgba(255,92,168,.5); transform:none; }
+
+#apercuCorps{
+  overflow:auto;
+  padding:16px;
+  background:#0c0d1c;
+}
+
+#apercuCorps iframe{
+  width:80vw;
+  height:80vh;
+  border:none;
+  border-radius:10px;
+  background:#fff;
+}
+
+#apercuCorps video{
+  display:block;
+  max-width:88vw;
+  max-height:80vh;
+  border-radius:10px;
+}
+
+#apercuCorps img{
+  display:block;
+  max-width:88vw;
+  max-height:80vh;
+  border-radius:10px;
+}
+
+#apercuCorps audio{ width:360px; margin-top:20px; }
+
+#apercuCorps pre{
+  margin:0;
+  max-width:84vw;
+  white-space:pre-wrap;
+  word-wrap:break-word;
+  color:var(--texte);
+  font-family:ui-monospace,Menlo,Consolas,monospace;
+  font-size:.9em;
+  line-height:1.5;
+}
+
+.apercuMessage{ color:var(--doux); }
+.apercuLien{ color:var(--accent2); }
 
 ::-webkit-scrollbar{ width:10px; height:10px; }
 ::-webkit-scrollbar-track{ background:transparent; }

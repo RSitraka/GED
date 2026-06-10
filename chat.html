@@ -13,6 +13,13 @@
   <div id="filtreActif"></div>
   <div id="arbo"></div>
   <button id="rafraichir" onclick="window.chargerArbre()">↻ Rafraîchir</button>
+
+  <div class="bloc">
+    <input id="catUpload" list="listeCategories" placeholder="Catégorie (dossier) — laisser vide pour « general »">
+    <datalist id="listeCategories"></datalist>
+    <a class="lien-ajout" onclick="document.getElementById('fichier').click()">➕ Ajouter un document</a>
+    <input id="fichier" type="file" accept="*/*" onchange="televerser()">
+  </div>
 </aside>
 
 <main id="principal">
@@ -22,15 +29,20 @@
     <input id="q" placeholder="Posez votre question…" onkeydown="if(event.key==='Enter')envoyer()">
     <button onclick="envoyer()">Envoyer</button>
   </p>
-  <label class="option"><input type="checkbox" id="insister" checked> Recherche approfondie (insiste sur tous les fichiers)</label>
-  <p class="barre">
-    <input id="catUpload" placeholder="Catégorie (sous-dossier)" value="general">
-    <input id="fichier" type="file" accept="*/*">
-    <button onclick="televerser()">Ajouter</button>
-  </p>
 </main>
 
+<div id="apercuModal" onclick="if(event.target===this)fermerApercu()">
+  <div class="apercuBoite">
+    <div class="apercuEntete">
+      <span id="apercuTitre"></span>
+      <button class="apercuFermer" onclick="fermerApercu()">✕ Fermer</button>
+    </div>
+    <div id="apercuCorps"></div>
+  </div>
+</div>
+
 <script src="/static/arborescence.js"></script>
+<script src="/static/apercu.js"></script>
 <script>
 function ajouter(qui, texte){
   const d = document.createElement("div");
@@ -81,7 +93,7 @@ async function envoyer(){
     body: JSON.stringify({
       texte: question,
       categorie: window.categorieFiltre,
-      insister: document.getElementById("insister").checked
+      insister: true
     })
   });
   const data = await r.json();

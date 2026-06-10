@@ -6,6 +6,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
+import apercu
 import arborescence
 import config
 import ingestion
@@ -13,6 +14,7 @@ import rag
 
 app = FastAPI(title="Mon NotebookLM privé")
 app.include_router(arborescence.routeur)
+app.include_router(apercu.routeur)
 
 os.makedirs("static", exist_ok=True)
 app.mount("/static", StaticFiles(directory="static"), name="static")
