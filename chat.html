@@ -57,29 +57,78 @@ function echapper(s){
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
-function formater(texte){
+function formater(texte, refs){
   let t = echapper(texte);
   t = t.replace(/\*\*(.+?)\*\*/g, '<strong class="cle">$1</strong>');
   t = t.replace(/\*(.+?)\*/g, '<strong class="cle">$1</strong>');
+  t = t.replace(/\[(\d+)\]/g, (m, n) => refs[n]
+    ? '<sup class="cite" data-n="' + n + '">' + n + '</sup>'
+    : m);
   return t;
 }
 
-function ajouterReponse(reponse, sources){
+function masquerCitation(){
+  const p = document.getElementById("citePopover");
+  if(p) p.style.display = "none";
+}
+
+function montrerCitation(chip, ref){
+  if(!ref) return;
+  let pop = document.getElementById("citePopover");
+  if(!pop){
+    pop = document.createElement("div");
+    pop.id = "citePopover";
+    pop.onclick = (e) => e.stopPropagation();
+    document.body.appendChild(pop);
+  }
+  pop.innerHTML = "";
+  const titre = document.createElement("div");
+  titre.className = "citeTitre";
+  titre.textContent = ref.source;
+  const extrait = document.createElement("div");
+  extrait.className = "citeExtrait";
+  extrait.textContent = ref.extrait;
+  const lien = document.createElement("a");
+  lien.className = "citeLien";
+  lien.textContent = "Afficher la source";
+  lien.onclick = () => { masquerCitation(); if(window.apercu) window.apercu(ref.chemin, ref.source); };
+  pop.appendChild(titre);
+  pop.appendChild(extrait);
+  pop.appendChild(lien);
+  const r = chip.getBoundingClientRect();
+  pop.style.display = "block";
+  pop.style.top = (window.scrollY + r.bottom + 6) + "px";
+  pop.style.left = Math.min(window.scrollX + r.left, window.innerWidth - 360) + "px";
+}
+
+function ajouterReponse(reponse, references){
+  const refs = {};
+  (references || []).forEach(r => { refs[r.numero] = r; });
   const d = document.createElement("div");
   d.className = "bot";
   const corps = document.createElement("div");
-  corps.innerHTML = formater(reponse.trim());
+  corps.innerHTML = formater(reponse.trim(), refs);
   d.appendChild(corps);
-  if(sources && sources.length > 0){
+
+  const chips = corps.querySelectorAll(".cite");
+  chips.forEach(chip => {
+    chip.onclick = (e) => { e.stopPropagation(); montrerCitation(chip, refs[chip.dataset.n]); };
+  });
+
+  if(chips.length === 0 && references && references.length > 0){
+    const noms = [...new Set(references.map(r => r.source))];
     const s = document.createElement("div");
     s.className = "source";
-    s.textContent = "Sources : " + sources.join(", ");
+    s.textContent = "Sources : " + noms.join(", ");
     d.appendChild(s);
   }
+
   const fil = document.getElementById("fil");
   fil.appendChild(d);
   fil.scrollTop = fil.scrollHeight;
 }
+
+document.addEventListener("click", masquerCitation);
 
 async function envoyer(){
   const champ = document.getElementById("q");
@@ -97,7 +146,7 @@ async function envoyer(){
     })
   });
   const data = await r.json();
-  ajouterReponse(data.reponse, data.sources);
+  ajouterReponse(data.reponse, data.references);
 }
 
 async function televerser(){

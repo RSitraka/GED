@@ -1,3 +1,5 @@
+import os
+
 import ollama
 
 import config
@@ -6,13 +8,14 @@ import ingestion
 collection = ingestion.ouvrir_collection()
 
 GABARIT = """Tu es un assistant qui répond UNIQUEMENT à partir du contexte fourni.
-Le contexte contient plusieurs passages séparés par "---" ; certains peuvent être hors sujet.
+Le contexte contient des passages numérotés ; chaque passage commence par son numéro et son
+fichier source, par exemple "[2] (tva.txt)".
 Sers-toi UNIQUEMENT des passages qui concernent directement la question et ignore les autres.
 Ne résume pas le contexte : réponds précisément et seulement à la question posée.
-Entoure OBLIGATOIREMENT de doubles astérisques les éléments précis qui répondent
-concrètement à la question : chiffres, montants, dates, délais, pourcentages, noms propres.
-Exemple de format attendu (sans guillemets autour de la réponse) :
-Le délai de paiement est de **30 jours** et un escompte de **2 %** s'applique sous **8 jours**.
+Après CHAQUE information, indique entre crochets le numéro du passage d'où elle vient : [1], [2]...
+N'invente aucun numéro : n'utilise que ceux réellement présents dans le contexte.
+Entoure de doubles astérisques les éléments précis : chiffres, montants, dates, délais, pourcentages, noms propres.
+Exemple : Le délai de paiement est de **30 jours** [1] et un escompte de **2 %** s'applique sous **8 jours** [1].
 Si la réponse ne figure dans aucun passage pertinent, réponds exactement :
 "Je n'ai pas cette information dans les documents fournis."
 Ne fais aucune supposition. Réponds en français, clairement et brièvement.
@@ -22,7 +25,7 @@ Contexte :
 
 Question : {question}
 
-Réponse (avec chaque élément clé entouré de **doubles astérisques**) :"""
+Réponse (avec citations [n] et éléments clés en **gras**) :"""
 
 
 def chercher(question, n=config.N_RESULTATS, categorie=None, seuil=config.SEUIL_PERTINENCE):
@@ -56,11 +59,37 @@ def _sans_reponse(texte):
     return "Je n'ai pas cette information" in texte
 
 
+def _extrait(morceau, maxi=600):
+    texte = morceau.strip()
+    if len(texte) > maxi:
+        return texte[:maxi].rstrip() + "…"
+    return texte
+
+
+def _references(morceaux, sources):
+    references = []
+    for numero, (morceau, source) in enumerate(zip(morceaux, sources), start=1):
+        chemin = source.get("chemin", "")
+        relatif = ""
+        if chemin:
+            relatif = os.path.relpath(chemin, config.DOSSIER_DOCS).replace(os.sep, "/")
+        references.append({
+            "numero": numero,
+            "source": source.get("source", ""),
+            "chemin": relatif,
+            "extrait": _extrait(morceau),
+        })
+    return references
+
+
 def _essayer(question, categorie, n, seuil):
     morceaux, sources = chercher(question, n=n, categorie=categorie, seuil=seuil)
     if not morceaux:
         return "Je n'ai pas cette information dans les documents fournis.", []
-    contexte = "\n\n---\n\n".join(morceaux)
+    references = _references(morceaux, sources)
+    contexte = "\n\n---\n\n".join(
+        f"[{r['numero']}] ({r['source']})\n{m}" for r, m in zip(references, morceaux)
+    )
     prompt = GABARIT.format(contexte=contexte, question=question)
     reponse = ollama.chat(
         model=config.LLM_MODEL,
@@ -69,22 +98,22 @@ def _essayer(question, categorie, n, seuil):
     )
     texte = reponse["message"]["content"]
     if _sans_reponse(texte):
-        return texte, []
-    noms = sorted({s["source"] for s in sources})
-    return texte, noms
+        return "Je n'ai pas cette information dans les documents fournis.", []
+    return texte.strip(), references
 
 
 def repondre(question, categorie=None, insister=None):
     if insister is None:
         insister = config.INSISTER
-    texte, noms = _essayer(question, categorie, config.N_RESULTATS, config.SEUIL_PERTINENCE)
+    texte, references = _essayer(question, categorie, config.N_RESULTATS, config.SEUIL_PERTINENCE)
     if insister and _sans_reponse(texte):
-        texte, noms = _essayer(question, None, config.N_INSISTANCE, config.SEUIL_INSISTANCE)
-    return texte, noms
+        texte, references = _essayer(question, None, config.N_INSISTANCE, config.SEUIL_INSISTANCE)
+    return texte, references
 
 
 if __name__ == "__main__":
     question = input("Votre question : ")
-    reponse, sources = repondre(question)
+    reponse, references = repondre(question)
     print("\n" + reponse)
-    print("\nSources :", ", ".join(sources) if sources else "aucune")
+    noms = sorted({r["source"] for r in references})
+    print("\nSources :", ", ".join(noms) if noms else "aucune")

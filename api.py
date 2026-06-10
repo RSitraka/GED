@@ -28,8 +28,8 @@ class Question(BaseModel):
 
 @app.post("/demander")
 def demander(q: Question):
-    reponse, sources = rag.repondre(q.texte, categorie=q.categorie, insister=q.insister)
-    return {"reponse": reponse, "sources": sources}
+    reponse, references = rag.repondre(q.texte, categorie=q.categorie, insister=q.insister)
+    return {"reponse": reponse, "references": references}
 
 
 @app.post("/televerser")

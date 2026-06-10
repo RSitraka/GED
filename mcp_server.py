@@ -15,8 +15,9 @@ def chercher_dans_la_base(question: str, categorie: str = "") -> str:
     par exemple "juridique" ou "comptabilite"
     """
     cat = categorie or None
-    reponse, sources = rag.repondre(question, categorie=cat)
-    liste = ", ".join(sources) if sources else "aucune"
+    reponse, references = rag.repondre(question, categorie=cat)
+    noms = sorted({r["source"] for r in references})
+    liste = ", ".join(noms) if noms else "aucune"
     return f"{reponse}\n\nSources : {liste}"
 
 
