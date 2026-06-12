@@ -1,6 +1,7 @@
 import os
 
 DOSSIER_DOCS = os.environ.get("GED_DOCS", "documents")
+DOSSIER_PARSED = os.environ.get("GED_PARSED", "parsed")
 DOSSIER_BASE = os.environ.get("GED_VECTOR_STORE", "vector_store")
 NOM_COLLECTION = os.environ.get("GED_COLLECTION", "connaissance")
 

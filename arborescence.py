@@ -12,7 +12,7 @@ def construire_arbre(racine):
     fichiers = []
     if os.path.isdir(racine):
         for nom in sorted(os.listdir(racine)):
-            if nom.startswith("."):
+            if nom.startswith(".") or "Zone.Identifier" in nom:
                 continue
             chemin = os.path.join(racine, nom)
             if os.path.isdir(chemin):

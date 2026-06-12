@@ -28,12 +28,31 @@ def ouvrir_collection():
     return client.get_or_create_collection(config.NOM_COLLECTION)
 
 
+def chemin_parse(chemin):
+    relatif = os.path.relpath(chemin, config.DOSSIER_DOCS)
+    return os.path.join(config.DOSSIER_PARSED, relatif + ".txt")
+
+
+def enregistrer_parse(chemin, texte):
+    cible = chemin_parse(chemin)
+    os.makedirs(os.path.dirname(cible), exist_ok=True)
+    with open(cible, "w", encoding="utf-8") as fichier:
+        fichier.write(texte)
+
+
+def supprimer_parse(chemin):
+    cible = chemin_parse(chemin)
+    if os.path.isfile(cible):
+        os.remove(cible)
+
+
 def purger_absents(collection):
     donnees = collection.get(include=["metadatas"])
     chemins = {m.get("chemin") for m in donnees["metadatas"] if m}
     for chemin in chemins:
         if chemin and not os.path.exists(chemin):
             collection.delete(where={"chemin": chemin})
+            supprimer_parse(chemin)
             print(f"  - {chemin} (supprimé du disque)")
 
 
@@ -52,6 +71,7 @@ def ingerer():
             categorie = os.path.relpath(racine, config.DOSSIER_DOCS)
             if categorie == ".":
                 categorie = "general"
+            enregistrer_parse(chemin, texte)
             collection.delete(where={"chemin": chemin})
             morceaux = decouper(texte)
             for i, morceau in enumerate(morceaux):

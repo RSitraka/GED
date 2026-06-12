@@ -1,5 +1,6 @@
 .venv/
 vector_store/
+parsed/
 __pycache__/
 *.pyc
 documents/**

@@ -1,4 +1,3 @@
-const APERCU_TEXTE = ["txt","md","markdown","log","csv","json","xml","yaml","yml","html","htm","py","js","css","rtf"];
 const APERCU_IMAGE = ["png","jpg","jpeg","gif","bmp","webp","svg","tif","tiff"];
 const APERCU_AUDIO = ["mp3","wav","m4a","flac","ogg","aac","wma"];
 const APERCU_VIDEO = ["mp4","webm","mov","mkv","m4v","avi"];
@@ -28,18 +27,14 @@ function apercu(chemin, nom){
     video.src = url;
     video.controls = true;
     corps.appendChild(video);
-  } else if(APERCU_TEXTE.includes(ext)){
+  } else {
     const pre = document.createElement("pre");
     pre.textContent = "Chargement…";
     corps.appendChild(pre);
-    fetch(url).then(r => r.text()).then(t => { pre.textContent = t; })
-      .catch(() => { pre.textContent = "Aperçu indisponible."; });
-  } else {
-    const message = document.createElement("p");
-    message.className = "apercuMessage";
-    message.innerHTML = "Aperçu direct non disponible pour ce type de fichier. "
-      + '<a class="apercuLien" href="' + url + '" target="_blank">Ouvrir dans un nouvel onglet</a>';
-    corps.appendChild(message);
+    fetch("/lire?chemin=" + encodeURIComponent(chemin))
+      .then(r => r.text())
+      .then(t => { pre.textContent = t; })
+      .catch(() => { pre.textContent = "Lecture indisponible."; });
   }
 
   document.getElementById("apercuModal").style.display = "flex";
