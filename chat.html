@@ -15,8 +15,11 @@
   <button id="rafraichir" onclick="window.chargerArbre()">↻ Rafraîchir</button>
 
   <div class="bloc">
-    <input id="catUpload" list="listeCategories" placeholder="Catégorie (dossier) — laisser vide pour « general »">
-    <datalist id="listeCategories"></datalist>
+    <div class="combo">
+      <input id="catUpload" autocomplete="off" placeholder="Catégorie (dossier) — vide = « general »">
+      <button type="button" id="catFleche" class="combo-fleche">▼</button>
+      <div id="catListe" class="combo-liste"></div>
+    </div>
     <a class="lien-ajout" onclick="document.getElementById('fichier').click()">➕ Ajouter un document</a>
     <input id="fichier" type="file" accept="*/*" onchange="televerser()">
   </div>
@@ -43,6 +46,7 @@
 
 <script src="/static/arborescence.js"></script>
 <script src="/static/apercu.js"></script>
+<script src="/static/categories.js"></script>
 <script>
 function ajouter(qui, texte){
   const d = document.createElement("div");
@@ -101,6 +105,34 @@ function montrerCitation(chip, ref){
   pop.style.left = Math.min(window.scrollX + r.left, window.innerWidth - 360) + "px";
 }
 
+function surlignerNombres(racine){
+  const motif = /\d[\d .,]*\s*(?:%|€|\$|jours?|mois|ans?|semaines?|heures?|minutes?|pour cent|euros?|EUR|USD)?/gi;
+  const marcheur = document.createTreeWalker(racine, NodeFilter.SHOW_TEXT, null);
+  const noeuds = [];
+  while(marcheur.nextNode()){
+    const n = marcheur.currentNode;
+    if(n.parentElement && n.parentElement.closest(".cite,strong")) continue;
+    if(/\d/.test(n.nodeValue)) noeuds.push(n);
+  }
+  for(const n of noeuds){
+    const frag = document.createDocumentFragment();
+    let dernier = 0;
+    const valeur = n.nodeValue;
+    valeur.replace(motif, (m, offset) => {
+      if(!/\d/.test(m)) return m;
+      if(offset > dernier) frag.appendChild(document.createTextNode(valeur.slice(dernier, offset)));
+      const fort = document.createElement("strong");
+      fort.className = "cle";
+      fort.textContent = m.trim();
+      frag.appendChild(fort);
+      dernier = offset + m.length;
+      return m;
+    });
+    if(dernier < valeur.length) frag.appendChild(document.createTextNode(valeur.slice(dernier)));
+    n.parentNode.replaceChild(frag, n);
+  }
+}
+
 function ajouterReponse(reponse, references){
   const refs = {};
   (references || []).forEach(r => { refs[r.numero] = r; });
@@ -109,6 +141,8 @@ function ajouterReponse(reponse, references){
   const corps = document.createElement("div");
   corps.innerHTML = formater(reponse.trim(), refs);
   d.appendChild(corps);
+
+  if(!corps.querySelector("strong.cle")) surlignerNombres(corps);
 
   const chips = corps.querySelectorAll(".cite");
   chips.forEach(chip => {

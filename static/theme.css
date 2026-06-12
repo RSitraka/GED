@@ -79,15 +79,56 @@ body::before{
   margin-bottom:8px;
 }
 
-#catUpload{ padding-right:34px; }
+#fichier{ display:none; }
 
-#catUpload::-webkit-calendar-picker-indicator{
-  opacity:1;
-  cursor:pointer;
-  filter:invert(70%);
+.combo{ position:relative; margin-bottom:8px; }
+
+.combo > #catUpload{ width:100%; padding-right:40px; }
+
+.combo-fleche{
+  position:absolute;
+  right:6px;
+  top:50%;
+  transform:translateY(-50%);
+  padding:7px 10px;
+  font-size:.75em;
+  color:var(--doux);
+  background:transparent;
+  box-shadow:none;
 }
 
-#fichier{ display:none; }
+.combo-fleche:hover{
+  transform:translateY(-50%);
+  box-shadow:none;
+  background:rgba(255,255,255,.08);
+  color:#fff;
+}
+
+.combo-liste{
+  display:none;
+  position:absolute;
+  z-index:30;
+  left:0;
+  right:0;
+  top:calc(100% + 4px);
+  max-height:230px;
+  overflow:auto;
+  border-radius:12px;
+  background:rgba(18,20,38,.98);
+  border:1px solid var(--bord);
+  box-shadow:0 16px 40px rgba(0,0,0,.5);
+}
+
+.combo-liste.ouvert{ display:block; }
+
+.combo-item{
+  padding:9px 12px;
+  cursor:pointer;
+  font-size:.9em;
+  color:var(--texte);
+}
+
+.combo-item:hover{ background:rgba(124,92,255,.4); }
 
 .lien-ajout{
   display:block;

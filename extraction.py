@@ -199,11 +199,24 @@ def _lire_audio(chemin):
     return _transcrire(chemin)
 
 
+def _a_audio(chemin):
+    try:
+        import av
+
+        conteneur = av.open(chemin)
+        present = len(conteneur.streams.audio) > 0
+        conteneur.close()
+        return present
+    except Exception:
+        return False
+
+
 def _lire_video(chemin):
     parties = []
-    transcription = _transcrire(chemin)
-    if transcription:
-        parties.append("Transcription audio :\n" + transcription)
+    if _a_audio(chemin):
+        transcription = _transcrire(chemin)
+        if transcription:
+            parties.append("Transcription audio :\n" + transcription)
     descriptions = []
     for image in _extraire_images(chemin):
         description = _decrire_image(image)

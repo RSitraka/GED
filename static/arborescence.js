@@ -82,19 +82,13 @@ async function chargerArbre(){
 }
 
 function remplirCategories(arbre){
-  const liste = document.getElementById("listeCategories");
-  if(!liste) return;
   const chemins = [];
   (function parcourir(noeud){
     if(noeud.chemin) chemins.push(noeud.chemin);
     noeud.dossiers.forEach(parcourir);
   })(arbre);
-  liste.innerHTML = "";
-  for(const chemin of chemins.sort()){
-    const option = document.createElement("option");
-    option.value = chemin;
-    liste.appendChild(option);
-  }
+  chemins.sort();
+  if(window.remplirListeCategories) window.remplirListeCategories(chemins);
 }
 
 window.chargerArbre = chargerArbre;
